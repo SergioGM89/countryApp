@@ -1,19 +1,39 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { Subject, debounceTime } from 'rxjs';
 
 @Component({
   selector: 'shared-search-box',
   templateUrl: 'search-box.component.html',
   styleUrls: ['./search-box.component.css'],
 })
-export class SearchBoxComponent {
+export class SearchBoxComponent implements OnInit, OnDestroy {
 
-@Input()
-public placeholder: string = '';
+  private debouncer = new Subject<string>();
 
-@Output()
-public onValue = new EventEmitter<string>();
+  @Input()
+  public placeholder: string = '';
 
-public emitValue(value: string){
-  this.onValue.emit(value);
-}
+  @Input()
+  public initialValue: string = '';
+
+  @Output()
+  public onDebounce = new EventEmitter<string>();
+
+  ngOnInit(): void {
+    this.debouncer
+    .pipe(
+      debounceTime(300)
+      )
+      .subscribe( value => {
+        this.onDebounce.emit(value);
+      })
+    }
+
+  ngOnDestroy(): void {
+    console.log('destruido');
+  }
+
+  onKeyPress( searchTerm: string ): void {
+    this.debouncer.next(searchTerm);
+  }
 }
